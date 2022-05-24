@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express()
 const port = process.env.PORT || 5000;
@@ -19,14 +19,30 @@ async function run() {
         await client.connect();
         console.log('Database connected');
         const serviceCollection = client.db('parts_manufacturer').collection('product');
+        const placeOrderCollection = client.db('parts_manufacturer').collection('placeOrder');
 
-        app.get('/parts', async (req, res) => {
+
+        // get all
+        app.get('/part', async (req, res) => {
             const query = {};
             const cursor = serviceCollection.find(query);
             const services = await cursor.toArray();
             res.send(services);
         })
 
+        // get one
+        app.get('/part/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const part = await serviceCollection.findOne(query);
+            res.send(part);
+        })
+
+        app.post("/placeOrder", async (req, res) => {
+            const placeOrder = req.body;
+            const result = await placeOrderCollection.insertOne(placeOrder);
+            res.send(result);
+        });
 
     }
     finally {
