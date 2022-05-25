@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
@@ -20,6 +21,7 @@ async function run() {
         console.log('Database connected');
         const serviceCollection = client.db('parts_manufacturer').collection('product');
         const placeOrderCollection = client.db('parts_manufacturer').collection('placeOrder');
+        const userCollection = client.db('parts_manufacturer').collection('users');
 
 
         // get all
@@ -38,6 +40,21 @@ async function run() {
             res.send(part);
         })
 
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ result, token });
+        })
+
+
+
         app.post("/placeOrder", async (req, res) => {
             const placeOrder = req.body;
             const result = await placeOrderCollection.insertOne(placeOrder);
@@ -47,7 +64,7 @@ async function run() {
         app.get("/placeOrder", async (req, res) => {
             const customerEmail = req.query.email;
             console.log(customerEmail);
-            const query = {customerEmail: customerEmail};
+            const query = { customerEmail: customerEmail };
             const placeOrder = req.body;
             const orders = await placeOrderCollection.find(query).toArray();
             res.send(orders);
