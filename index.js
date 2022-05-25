@@ -15,6 +15,22 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 // console.log(uri);
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyJWT(req, res, next) {
+    console.log('abc');
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'UnAuthorized access' });
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' })
+        }
+        req.decoded = decoded;
+        next();
+    });
+}
+
 async function run() {
     try {
         await client.connect();
@@ -22,6 +38,7 @@ async function run() {
         const serviceCollection = client.db('parts_manufacturer').collection('product');
         const placeOrderCollection = client.db('parts_manufacturer').collection('placeOrder');
         const userCollection = client.db('parts_manufacturer').collection('users');
+        const reviewCollection = client.db('parts_manufacturer').collection('reviews');
 
 
         // get all
@@ -53,7 +70,20 @@ async function run() {
             res.send({ result, token });
         })
 
-
+        app.get("/placeOrder", verifyJWT, async (req, res) => {
+            const customerEmail = req.query.email;
+            console.log(customerEmail);
+            
+            const decodedEmail = req.decoded.email;
+            if (decodedEmail === customerEmail) {
+                const query = { customerEmail: customerEmail };
+                const orders = await placeOrderCollection.find(query).toArray();
+                return res.send(orders);
+            }
+            else {
+                return res.status(403).send({ message: 'forbidden access' });
+            }
+        });
 
         app.post("/placeOrder", async (req, res) => {
             const placeOrder = req.body;
@@ -61,13 +91,19 @@ async function run() {
             res.send(result);
         });
 
-        app.get("/placeOrder", async (req, res) => {
-            const customerEmail = req.query.email;
-            console.log(customerEmail);
-            const query = { customerEmail: customerEmail };
-            const placeOrder = req.body;
-            const orders = await placeOrderCollection.find(query).toArray();
-            res.send(orders);
+
+
+        app.get('/review', async (req, res) => {
+            const query = {};
+            const reviews = await reviewCollection.find(query).toArray();
+            res.send(reviews);
+
+        });
+
+        app.post("/review", async (req, res) => {
+            const review = req.body;
+            const result = await reviewCollection.insertOne(review);
+            res.send(result);
         });
 
 
