@@ -44,6 +44,17 @@ async function run() {
             res.send(result);
         });
 
+        app.get("/placeOrder", async (req, res) => {
+            const customerEmail = req.query.email;
+            console.log(customerEmail);
+            const query = {customerEmail: customerEmail};
+            const placeOrder = req.body;
+            const orders = await placeOrderCollection.find(query).toArray();
+            res.send(orders);
+        });
+
+
+
     }
     finally {
 
