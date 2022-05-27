@@ -69,7 +69,7 @@ async function run() {
             res.send({ admin: isAdmin })
         })
 
-        app.put('/user/admin/:email',verifyJWT, async (req, res) => {
+        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             const requester = req.decoded.email;
             const requesterAccount = await userCollection.findOne({ email: requester });
@@ -120,6 +120,13 @@ async function run() {
             const result = await placeOrderCollection.insertOne(placeOrder);
             res.send(result);
         });
+
+        app.get('/userinfo/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            res.send(user);
+        })
 
 
 
