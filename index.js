@@ -59,6 +59,7 @@ async function run() {
             res.send(part);
         })
 
+        // find
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
@@ -205,7 +206,6 @@ async function run() {
                     transactionId: payment.transactionId,
                 },
             };
-
             const updatedOrder = await placeOrderCollection.updateOne(filter, updateDoc);
             const result = await paymentCollection.insertOne(payment);
             res.send(updateDoc);
