@@ -140,6 +140,7 @@ async function run() {
             res.send(orders);
         });
 
+        // get orders
         app.get('/orders', async (req, res) => {
             const query = {}
             const cursor = placeOrderCollection.find(query);
