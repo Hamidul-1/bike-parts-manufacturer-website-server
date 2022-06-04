@@ -140,6 +140,13 @@ async function run() {
             res.send(orders);
         });
 
+        app.get('/orders', async (req, res) => {
+            const query = {}
+            const cursor = placeOrderCollection.find(query);
+            const products = await cursor.toArray();
+            res.send(products);
+        });
+
         // delete order 
         app.delete('/placeOrder/:id', async (req, res) => {
             const id = req.params.id;
